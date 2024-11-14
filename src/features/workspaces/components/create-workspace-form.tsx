@@ -1,9 +1,19 @@
 "use client";
 import { z } from "zod";
+import Image from "next/image";
+import React, { useRef } from "react";
+import { ImageIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { createWorkspaceSchema } from "../schemas";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { useCreateWorkspace } from "../api/use-create-workspace";
+import { createWorkspaceSchema } from "../schemas";
+
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { DottedSeperator } from "@/components/dotted-seperator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -11,16 +21,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-import { DottedSeperator } from "@/components/dotted-seperator";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useCreateWorkspace } from "../api/use-create-workspace";
-import React, { useRef } from "react";
-import Image from "next/image";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ImageIcon } from "lucide-react";
 
 interface CreateWorkspaceFormProps {
   onCancel?: () => void;
@@ -28,6 +29,7 @@ interface CreateWorkspaceFormProps {
 
 export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
   const { mutate, isPending } = useCreateWorkspace();
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,9 +48,9 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
     mutate(
       { form: finalValues },
       {
-        onSuccess: () => {
+        onSuccess: ({ data }) => {
           form.reset();
-          // TODO: redirect to new workspace
+          router.push(`/workspaces/${data.$id}`);
         },
       }
     );
