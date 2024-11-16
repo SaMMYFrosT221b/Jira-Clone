@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
-import { createWorkspaceSchema } from "../schemas";
+import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 import { zValidator } from "@hono/zod-validator";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -12,6 +12,7 @@ import {
 } from "@/config";
 import { MemberRole } from "@/features/members/types";
 import { generateInviteCode } from "@/lib/utils";
+import { getMember } from "@/features/members/utils";
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -83,6 +84,58 @@ const app = new Hono()
         }
       );
 
+      return c.json({ data: workspace });
+    }
+  )
+  .patch(
+    "/:workspaceId",
+    sessionMiddleware,
+    zValidator("form", updateWorkspaceSchema),
+    async (c) => {
+      const database = c.get("databases");
+      const storage = c.get("storage");
+      const user = c.get("user");
+
+      const { workspaceId } = c.req.param();
+      const { name, image } = c.req.valid("form");
+      const member = await getMember({
+        database,
+        userId: user.$id,
+        workspaceId,
+      });
+      if (!member || member.role !== MemberRole.ADMIN) {
+        return c.json(
+          { error: "You are not authorized to update this workspace" },
+          403
+        );
+      }
+      let uploadedImageUrl: string | undefined;
+
+      if (image instanceof File) {
+        const file = await storage.createFile(
+          IMAGES_BUCKET_ID,
+          ID.unique(),
+          image
+        );
+        const arrayBuffer = await storage.getFilePreview(
+          IMAGES_BUCKET_ID,
+          file.$id
+        );
+        uploadedImageUrl = `data:image/png;base64,${Buffer.from(
+          arrayBuffer
+        ).toString("base64")}`;
+      } else {
+        uploadedImageUrl = image;
+      }
+      const workspace = await database.updateDocument(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        workspaceId,
+        {
+          name,
+          imageUrl: uploadedImageUrl,
+        }
+      );
       return c.json({ data: workspace });
     }
   );
