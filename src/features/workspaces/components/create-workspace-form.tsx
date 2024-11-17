@@ -136,6 +136,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                           disabled={isPending}
                           variant="teritary"
                           size="xs"
+                          type="button"
                           className="w-fit mt-2"
                           onClick={() => inputRef.current?.click()}
                         >
