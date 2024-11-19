@@ -99,6 +99,7 @@ const app = new Hono()
     sessionMiddleware,
     zValidator("json", createTaskSchema),
     async (c) => {
+      console.log("create task");
       const user = c.get("user");
       const databases = c.get("databases");
       const { name, status, workspaceId, projectId, dueDate, assigneeId } =
