@@ -15,3 +15,13 @@ export function generateInviteCode(length: number) {
   }
   return result;
 }
+
+export function snakeCaseToTitleCase(str: string) {
+  // Implement this function
+  return str
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, function (a) {
+      return a.toUpperCase();
+    });
+}
